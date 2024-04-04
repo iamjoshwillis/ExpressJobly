@@ -8,7 +8,12 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 /** Related functions for companies. */
 
 class Job {
-
+  /** Create a job (from data), update db, return new job data.
+   *
+   * data should be { title, salary, equity, companyHandle }
+   *
+   * Returns { id, title, salary, equity, companyHandle }
+   **/
 
   static async create(data) {
     const result = await db.query(
@@ -29,7 +34,16 @@ class Job {
     return job;
   }
 
-//Find all Jobs with Filter Parameters Included
+  /** Find all jobs (optional filter on searchFilters).
+   *
+   * searchFilters (all optional):
+   * - minSalary
+   * - hasEquity (true returns only jobs with equity > 0, other values ignored)
+   * - title (will find case-insensitive, partial matches)
+   *
+   * Returns [{ id, title, salary, equity, companyHandle, companyName }, ...]
+   * */
+
   static async findAll({ minSalary, hasEquity, title } = {}) {
     let query = `SELECT j.id,
                         j.title,
@@ -42,6 +56,8 @@ class Job {
     let whereExpressions = [];
     let queryValues = [];
 
+    // For each possible search term, add to whereExpressions and
+    // queryValues so we can generate the right SQL
 
     if (minSalary !== undefined) {
       queryValues.push(minSalary);
@@ -61,13 +77,21 @@ class Job {
       query += " WHERE " + whereExpressions.join(" AND ");
     }
 
+    // Finalize query and return results
+
     query += " ORDER BY title";
     const jobsRes = await db.query(query, queryValues);
     return jobsRes.rows;
   }
 
+  /** Given a job id, return data about job.
+   *
+   * Returns { id, title, salary, equity, companyHandle, company }
+   *   where company is { handle, name, description, numEmployees, logoUrl }
+   *
+   * Throws NotFoundError if not found.
+   **/
 
-//Returns data about selected Job Type
   static async get(id) {
     const jobRes = await db.query(
           `SELECT id,
@@ -97,8 +121,18 @@ class Job {
     return job;
   }
 
+  /** Update job data with `data`.
+   *
+   * This is a "partial update" --- it's fine if data doesn't contain
+   * all the fields; this only changes provided ones.
+   *
+   * Data can include: { title, salary, equity }
+   *
+   * Returns { id, title, salary, equity, companyHandle }
+   *
+   * Throws NotFoundError if not found.
+   */
 
-//Updates Selected Job with Partial Data
   static async update(id, data) {
     const { setCols, values } = sqlForPartialUpdate(
         data,
@@ -121,8 +155,11 @@ class Job {
     return job;
   }
 
+  /** Delete given job from database; returns undefined.
+   *
+   * Throws NotFoundError if company not found.
+   **/
 
-//Deletes selected Job
   static async remove(id) {
     const result = await db.query(
           `DELETE

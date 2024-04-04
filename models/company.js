@@ -44,7 +44,7 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll(filters = {}) {
+  static async findAll(searchFilters = {}) {
     let query = `SELECT handle,
                   name,
                   description,
@@ -53,7 +53,11 @@ class Company {
            FROM companies`;
     let whereExpressions = [];
     let queryValues = [];
-    const { minEmployees, maxEmployees, name } = filters;
+    const { minEmployees, maxEmployees, name } = searchFilters;
+
+    if (minEmployees > maxEmployees) {
+      throw new BadRequestError("Max employees cannot be greater than min");
+    }
 
     if (minEmployees !== undefined) {
       queryValues.push(minEmployees);
@@ -68,6 +72,10 @@ class Company {
     if (name) {
       queryValues.push(`%${name}%`);
       whereExpressions.push(`name ILIKE $${queryValues.length}`);
+    }
+
+    if (whereExpressions.length > 0) {
+      query += " WHERE " + whereExpressions.join(" AND ");
     }
 
     query += " ORDER BY name";
