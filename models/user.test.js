@@ -135,6 +135,7 @@ describe("get", function () {
   test("works", async function () {
     let user = await User.get("u1");
     expect(user).toEqual({
+      applications: [],
       username: "u1",
       firstName: "U1F",
       lastName: "U1L",

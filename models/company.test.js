@@ -94,6 +94,7 @@ describe("get", function () {
     let company = await Company.get("c1");
     expect(company).toEqual({
       handle: "c1",
+      jobs: [],
       name: "C1",
       description: "Desc1",
       numEmployees: 1,

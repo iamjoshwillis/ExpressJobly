@@ -172,6 +172,7 @@ describe("GET /users/:username", function () {
     expect(resp.body).toEqual({
       user: {
         username: "u1",
+        applications: [],
         firstName: "U1F",
         lastName: "U1L",
         email: "user1@user.com",
